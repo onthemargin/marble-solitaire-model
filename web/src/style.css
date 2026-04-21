@@ -1,0 +1,154 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #0f0f1a;
+  color: #e0e0e0;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+}
+
+#app {
+  max-width: 700px;
+  width: 100%;
+  padding: 24px 16px;
+}
+
+header { text-align: center; margin-bottom: 24px; }
+h1 { font-size: 1.6rem; color: #fff; margin-bottom: 4px; }
+.subtitle { font-size: 0.85rem; color: #888; }
+
+/* Generation selector */
+.gen-selector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.gen-label { color: #888; font-size: 0.85rem; margin-right: 8px; }
+.gen-btn {
+  background: #1a1a2e;
+  border: 1px solid #333;
+  color: #aaa;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  transition: all 0.2s;
+}
+.gen-btn:hover { border-color: #666; color: #fff; }
+.gen-btn.active { border-color: #7c3aed; background: #1e1040; color: #c4b5fd; }
+.gen-name { font-size: 0.65rem; opacity: 0.7; }
+.gen-arrow { color: #444; font-size: 0.8rem; }
+
+/* Main layout */
+.main-content {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+.board-container {
+  width: 320px;
+  height: 320px;
+  flex-shrink: 0;
+}
+#board { width: 100%; height: 100%; }
+
+/* Stats */
+.stats-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 120px;
+}
+.stat {
+  background: #1a1a2e;
+  border: 1px solid #2a2a3e;
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+.stat-label { display: block; font-size: 0.7rem; color: #666; text-transform: uppercase; letter-spacing: 0.05em; }
+.stat-value { display: block; font-size: 1.2rem; color: #fff; font-weight: 600; margin-top: 2px; }
+
+/* Controls */
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+button {
+  background: #7c3aed;
+  color: #fff;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+button:hover { background: #6d28d9; }
+button:disabled { background: #333; color: #666; cursor: not-allowed; }
+#reset-btn { background: #2a2a3e; }
+#reset-btn:hover { background: #3a3a4e; }
+
+.speed-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: #888;
+}
+.speed-control input { width: 80px; accent-color: #7c3aed; }
+
+/* About section */
+.about-section {
+  background: #1a1a2e;
+  border: 1px solid #2a2a3e;
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+.about-section summary {
+  cursor: pointer;
+  color: #888;
+  font-size: 0.85rem;
+}
+.about-content {
+  margin-top: 12px;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: #aaa;
+}
+.about-content h3 { color: #c4b5fd; margin: 12px 0 4px; font-size: 0.9rem; }
+.about-content ul, .about-content ol { margin-left: 20px; }
+.about-content li { margin-bottom: 4px; }
+
+/* SVG board styles */
+.hole { fill: #1a1a2e; stroke: #333; stroke-width: 1; }
+.marble {
+  fill: #8b5cf6;
+  stroke: #a78bfa;
+  stroke-width: 1;
+  transition: opacity 0.3s;
+  cursor: default;
+}
+.marble.removing { opacity: 0; }
+.marble.jumping {
+  transition: cx 0.3s ease-in-out, cy 0.3s ease-in-out;
+}
+
+@media (max-width: 600px) {
+  .main-content { flex-direction: column; align-items: center; }
+  .stats-panel { flex-direction: row; flex-wrap: wrap; justify-content: center; }
+  .board-container { width: 280px; height: 280px; }
+}

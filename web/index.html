@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Marble Solitaire AI</title>
+  <link rel="stylesheet" href="./src/style.css">
+</head>
+<body>
+  <div id="app">
+    <header>
+      <h1>Marble Solitaire AI</h1>
+      <p class="subtitle">Watch an AlphaZero-style neural network learn to solve European peg solitaire</p>
+    </header>
+
+    <div class="gen-selector">
+      <span class="gen-label">Generation:</span>
+      <button class="gen-btn active" data-gen="1">1<span class="gen-name">Random</span></button>
+      <span class="gen-arrow">&rarr;</span>
+      <button class="gen-btn" data-gen="2">2<span class="gen-name">Novice</span></button>
+      <span class="gen-arrow">&rarr;</span>
+      <button class="gen-btn" data-gen="3">3<span class="gen-name">Apprentice</span></button>
+      <span class="gen-arrow">&rarr;</span>
+      <button class="gen-btn" data-gen="4">4<span class="gen-name">Skilled</span></button>
+      <span class="gen-arrow">&rarr;</span>
+      <button class="gen-btn" data-gen="5">5<span class="gen-name">Expert</span></button>
+    </div>
+
+    <div class="main-content">
+      <div class="board-container">
+        <svg id="board" viewBox="0 0 350 350"></svg>
+      </div>
+      <div class="stats-panel">
+        <div class="stat">
+          <span class="stat-label">Marbles</span>
+          <span class="stat-value" id="marble-count">36</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Move</span>
+          <span class="stat-value" id="move-count">0</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Confidence</span>
+          <span class="stat-value" id="confidence">--</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Status</span>
+          <span class="stat-value" id="status">Ready</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button id="solve-btn">Solve</button>
+      <button id="reset-btn">Reset</button>
+      <label class="speed-control">
+        Speed
+        <input type="range" id="speed" min="50" max="1000" value="400" step="50">
+      </label>
+    </div>
+
+    <details class="about-section">
+      <summary>How It Works</summary>
+      <div class="about-content">
+        <h3>The Game</h3>
+        <p>European marble solitaire has 37 holes arranged in a cross pattern. Start with 36 marbles (center empty). Jump a marble over an adjacent one to remove it. Goal: end with just 1 marble. Most games end stuck with many marbles &mdash; there are billions of possible games.</p>
+
+        <h3>The Neural Network</h3>
+        <p>A small "brain" (convolutional neural network with ~75,000 parameters) looks at the board and predicts:</p>
+        <ul>
+          <li><strong>Policy</strong>: which move to make (probability for each possible jump)</li>
+          <li><strong>Value</strong>: how good is this position (score from -1 to +1)</li>
+        </ul>
+
+        <h3>MCTS (Monte Carlo Tree Search)</h3>
+        <p>Before each move, the model "imagines" hundreds of possible futures. It combines the neural network's intuition with simulated lookahead to make better decisions &mdash; like a chess player thinking ahead.</p>
+
+        <h3>How It Learns (AlphaZero Loop)</h3>
+        <ol>
+          <li>Play many games using MCTS (self-play)</li>
+          <li>Record which moves were tried and how each game ended</li>
+          <li>Train the neural network on these experiences</li>
+          <li>Repeat &mdash; each generation plays better than the last</li>
+        </ol>
+
+        <h3>What You're Seeing</h3>
+        <p>The 5 generations show the model improving from random (Gen 1) to skilled (Gen 5). Gen 1 has never seen a solitaire board. Gen 5 has played thousands of games and discovered strategies on its own.</p>
+      </div>
+    </details>
+  </div>
+  <script type="module" src="./src/main.ts"></script>
+</body>
+</html>
