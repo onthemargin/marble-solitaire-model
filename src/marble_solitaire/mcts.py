@@ -76,10 +76,13 @@ def _expand(node, network):
         return compute_outcome(node.state.count_marbles())
 
     state_tensor = torch.FloatTensor(node.state.to_tensor()).unsqueeze(0)
+    # Move to same device as model
+    device = next(network.parameters()).device
+    state_tensor = state_tensor.to(device)
     with torch.no_grad():
         policy_logits, value = network(state_tensor)
 
-    policy_logits = policy_logits.squeeze(0).numpy()
+    policy_logits = policy_logits.squeeze(0).cpu().numpy()
     value = value.item()
 
     mask = create_legal_move_mask(legal_moves)
