@@ -44,6 +44,8 @@ def run_training(
     weight_decay=1e-4,
     output_dir="models",
     checkpoint_iters=None,
+    resume_from=None,
+    start_iter=1,
 ):
     """Full AlphaZero training loop."""
     import os
@@ -56,11 +58,17 @@ def run_training(
         checkpoint_iters = {1, 5, 15, 30, 50}
 
     os.makedirs(output_dir, exist_ok=True)
-    model = SolitaireNet()
+
+    if resume_from:
+        model = load_checkpoint(resume_from)
+        print(f"Resumed from {resume_from}")
+    else:
+        model = SolitaireNet()
+
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
     replay_buffer = ReplayBuffer(max_size=50000)
 
-    for iteration in range(1, n_iterations + 1):
+    for iteration in range(start_iter, start_iter + n_iterations):
         iter_start = time.time()
 
         # Self-play
@@ -104,7 +112,7 @@ def run_training(
         elapsed = time.time() - iter_start
 
         print(
-            f"Iter {iteration:3d}/{n_iterations} | "
+            f"Iter {iteration:3d}/{start_iter + n_iterations - 1} | "
             f"Loss: {avg_loss:.4f} | "
             f"Avg remaining: {avg_remaining:.1f} | "
             f"Solved: {solved}/10 | "
@@ -130,11 +138,22 @@ if __name__ == "__main__":
     parser.add_argument("--episodes", type=int, default=50)
     parser.add_argument("--simulations", type=int, default=50)
     parser.add_argument("--output-dir", type=str, default="models")
+    parser.add_argument("--resume", type=str, default=None, help="Path to checkpoint to resume from")
+    parser.add_argument("--start-iter", type=int, default=1)
+    parser.add_argument("--checkpoint-iters", type=str, default=None,
+                        help="Comma-separated iteration numbers to save checkpoints")
     args = parser.parse_args()
+
+    ckpt_iters = None
+    if args.checkpoint_iters:
+        ckpt_iters = set(int(x) for x in args.checkpoint_iters.split(","))
 
     run_training(
         n_iterations=args.iterations,
         episodes_per_iter=args.episodes,
         n_simulations=args.simulations,
         output_dir=args.output_dir,
+        resume_from=args.resume,
+        start_iter=args.start_iter,
+        checkpoint_iters=ckpt_iters,
     )

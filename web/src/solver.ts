@@ -18,11 +18,11 @@ export interface PredictResult {
 }
 
 const GEN_MODELS: Record<number, string> = {
-  1: 'gen1_random',
-  2: 'gen2_novice',
-  3: 'gen3_apprentice',
-  4: 'gen4_skilled',
-  5: 'gen5_expert',
+  1: 'gen1_clueless',
+  2: 'gen2_beginner',
+  3: 'gen3_intermediate',
+  4: 'gen4_advanced',
+  5: 'gen5_master',
 };
 
 let currentSession: ort.InferenceSession | null = null;

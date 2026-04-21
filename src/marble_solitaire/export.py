@@ -22,11 +22,11 @@ def export_to_onnx(model, output_path, opset_version=17):
 
 
 GEN_LABELS = {
-    1: "gen1_random",
-    5: "gen2_novice",
-    15: "gen3_apprentice",
-    30: "gen4_skilled",
-    50: "gen5_expert",
+    1: "gen1_clueless",
+    15: "gen2_beginner",
+    50: "gen3_intermediate",
+    150: "gen4_advanced",
+    250: "gen5_master",
 }
 
 

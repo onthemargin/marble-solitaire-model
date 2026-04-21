@@ -129,7 +129,26 @@ button:disabled { background: #333; color: #666; cursor: not-allowed; }
   line-height: 1.6;
   color: #aaa;
 }
-.about-content h3 { color: #c4b5fd; margin: 12px 0 4px; font-size: 0.9rem; }
+.about-content h3 { color: #c4b5fd; margin: 16px 0 6px; font-size: 0.9rem; }
+.about-content h3:first-child { margin-top: 0; }
+
+/* Training stats table */
+.training-stats {
+  background: #12121f;
+  border: 1px solid #2a2a3e;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin: 10px 0;
+}
+.training-stat-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.training-stat-row:last-child { border-bottom: none; }
+.training-stat-row span:first-child { color: #888; }
+.training-stat-row span:last-child { color: #c4b5fd; font-weight: 500; }
 .about-content ul, .about-content ol { margin-left: 20px; }
 .about-content li { margin-bottom: 4px; }
 

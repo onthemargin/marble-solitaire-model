@@ -24,11 +24,18 @@ class MCTSNode:
         return self.W / self.N if self.N > 0 else 0.0
 
 
-def mcts_search(root_state, network, n_simulations, c_puct=1.5):
+def mcts_search(root_state, network, n_simulations, c_puct=1.5,
+                dirichlet_alpha=0.3, dirichlet_epsilon=0.25):
     root = MCTSNode(state=root_state)
     if root_state.is_terminal():
         return root
     _expand(root, network)
+
+    # Add Dirichlet noise to root priors for exploration
+    if dirichlet_epsilon > 0 and root.children:
+        noise = np.random.dirichlet([dirichlet_alpha] * len(root.children))
+        for i, child in enumerate(root.children.values()):
+            child.P = (1 - dirichlet_epsilon) * child.P + dirichlet_epsilon * noise[i]
 
     for _ in range(n_simulations):
         node = root
