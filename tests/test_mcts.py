@@ -7,8 +7,11 @@ from marble_solitaire.mcts import MCTSNode, mcts_search, get_action_probabilitie
 
 
 class TestComputeOutcome:
-    def test_solved_is_plus_one(self):
-        assert compute_outcome(1) == 1.0
+    def test_solved_center_is_plus_one(self):
+        assert compute_outcome(1, center_marble=True) == 1.0
+
+    def test_solved_not_center(self):
+        assert compute_outcome(1, center_marble=False) == 0.8
 
     def test_two_marbles_is_zero(self):
         assert compute_outcome(2) == pytest.approx(0.0)

@@ -1,15 +1,15 @@
 import * as ort from 'onnxruntime-web';
 import { BoardGrid, Move, boardToTensor, getLegalMoves } from './board';
 
-// Move encoding: direction * 49 + row * 7 + col
+// Move encoding: (row * 7 + col) * 4 + direction — must match Python board.py
 function moveToIndex(move: Move): number {
-  return move.dir * 49 + move.row * 7 + move.col;
+  return (move.row * 7 + move.col) * 4 + move.dir;
 }
 
 function indexToMove(idx: number): Move {
-  const dir = Math.floor(idx / 49);
-  const rem = idx % 49;
-  return { row: Math.floor(rem / 7), col: rem % 7, dir };
+  const dir = idx % 4;
+  const pos = Math.floor(idx / 4);
+  return { row: Math.floor(pos / 7), col: pos % 7, dir };
 }
 
 export interface PredictResult {

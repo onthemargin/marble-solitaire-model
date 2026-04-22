@@ -4,9 +4,11 @@ import torch
 from marble_solitaire.board import BoardState, create_legal_move_mask, move_to_index
 
 
-def compute_outcome(remaining_marbles: int) -> float:
+def compute_outcome(remaining_marbles: int, center_marble: bool = False) -> float:
+    if remaining_marbles == 1 and center_marble:
+        return 1.0   # perfect solve
     if remaining_marbles == 1:
-        return 1.0
+        return 0.8    # solved but not centered
     return -1.0 + 2.0 / remaining_marbles
 
 
@@ -53,11 +55,11 @@ def mcts_search(root_state, network, n_simulations, c_puct=1.5,
             path.append(node)
 
         if node.state.is_terminal():
-            value = compute_outcome(node.state.count_marbles())
+            value = compute_outcome(node.state.count_marbles(), node.state.has_center_marble())
         elif not node.children:
             legal = node.state.get_legal_moves()
             if not legal:
-                value = compute_outcome(node.state.count_marbles())
+                value = compute_outcome(node.state.count_marbles(), node.state.has_center_marble())
             else:
                 value = _expand(node, network)
         else:
@@ -73,7 +75,7 @@ def mcts_search(root_state, network, n_simulations, c_puct=1.5,
 def _expand(node, network):
     legal_moves = node.state.get_legal_moves()
     if not legal_moves:
-        return compute_outcome(node.state.count_marbles())
+        return compute_outcome(node.state.count_marbles(), node.state.has_center_marble())
 
     state_tensor = torch.FloatTensor(node.state.to_tensor()).unsqueeze(0)
     # Move to same device as model

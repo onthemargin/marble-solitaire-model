@@ -99,6 +99,9 @@ button {
 }
 button:hover { background: #6d28d9; }
 button:disabled { background: #333; color: #666; cursor: not-allowed; }
+#play-btn { background: #059669; }
+#play-btn:hover { background: #047857; }
+#play-btn.active-mode { background: #7c3aed; }
 #reset-btn { background: #2a2a3e; }
 #reset-btn:hover { background: #3a3a4e; }
 
@@ -160,6 +163,18 @@ button:disabled { background: #333; color: #666; cursor: not-allowed; }
   stroke-width: 1;
   transition: opacity 0.3s;
   cursor: default;
+}
+.marble.selected {
+  fill: #c084fc;
+  stroke: #e9d5ff;
+  stroke-width: 2;
+  filter: drop-shadow(0 0 6px rgba(192, 132, 252, 0.6));
+}
+.hole.target-hole {
+  fill: #2a2a4e;
+  stroke: #7c3aed;
+  stroke-width: 2;
+  stroke-dasharray: 4 3;
 }
 .marble.removing { opacity: 0; }
 .marble.jumping {

@@ -13,6 +13,6 @@ models/training.log
 !models/.gitkeep
 
 # Web build artifacts
-web/dist/
 web/node_modules/
 web/public/models/*.onnx
+# web/dist/ is checked in for deployment (contains pre-built ONNX models)

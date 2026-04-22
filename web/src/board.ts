@@ -143,19 +143,84 @@ export function animateMove(
   movingMarble.setAttribute('data-r', String(dstR));
   movingMarble.setAttribute('data-c', String(dstC));
 
-  // Fade out jumped marble
+  // Flash jumped marble red, then fade out
+  if (jumpedMarble) {
+    jumpedMarble.style.transition = 'fill 150ms, stroke 150ms';
+    jumpedMarble.style.fill = '#ef4444';
+    jumpedMarble.style.stroke = '#f87171';
+  }
+
   setTimeout(() => {
     if (jumpedMarble) {
       jumpedMarble.style.transition = `opacity ${duration / 2}ms`;
       jumpedMarble.style.opacity = '0';
     }
-  }, duration / 3);
+  }, duration * 0.4);
 
   setTimeout(() => {
     if (jumpedMarble) jumpedMarble.remove();
     if (movingMarble) movingMarble.style.transition = '';
     onComplete();
   }, duration);
+}
+
+export function findMove(grid: BoardGrid, fromR: number, fromC: number, toR: number, toC: number): Move | null {
+  // Check if jumping from (fromR,fromC) to (toR,toC) is a legal move
+  for (const [dir, [dr, dc]] of Object.entries(DIR_DELTAS)) {
+    if (fromR + 2 * dr === toR && fromC + 2 * dc === toC) {
+      const midR = fromR + dr, midC = fromC + dc;
+      if (midR >= 0 && midR < 7 && midC >= 0 && midC < 7
+        && VALID_MASK[midR][midC] && grid[midR][midC]
+        && VALID_MASK[toR][toC] && !grid[toR][toC]
+        && VALID_MASK[fromR][fromC] && grid[fromR][fromC]) {
+        return { row: fromR, col: fromC, dir: Number(dir) };
+      }
+    }
+  }
+  return null;
+}
+
+export function getClickTarget(svgX: number, svgY: number): { row: number; col: number } | null {
+  for (let r = 0; r < 7; r++) {
+    for (let c = 0; c < 7; c++) {
+      if (!VALID_MASK[r][c]) continue;
+      const dx = svgX - cx(c);
+      const dy = svgY - cy(r);
+      if (dx * dx + dy * dy <= MARBLE_R * MARBLE_R) {
+        return { row: r, col: c };
+      }
+    }
+  }
+  return null;
+}
+
+export function renderBoardWithSelection(svg: SVGSVGElement, grid: BoardGrid, selectedR?: number, selectedC?: number, validTargets?: Set<string>): void {
+  svg.innerHTML = '';
+  for (let r = 0; r < 7; r++) {
+    for (let c = 0; c < 7; c++) {
+      if (!VALID_MASK[r][c]) continue;
+      const isTarget = validTargets?.has(`${r},${c}`);
+      // Hole
+      const hole = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      hole.setAttribute('cx', String(cx(c)));
+      hole.setAttribute('cy', String(cy(r)));
+      hole.setAttribute('r', String(MARBLE_R));
+      hole.setAttribute('class', isTarget ? 'hole target-hole' : 'hole');
+      svg.appendChild(hole);
+      // Marble
+      if (grid[r][c]) {
+        const marble = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        marble.setAttribute('cx', String(cx(c)));
+        marble.setAttribute('cy', String(cy(r)));
+        marble.setAttribute('r', String(MARBLE_R - 2));
+        const isSelected = r === selectedR && c === selectedC;
+        marble.setAttribute('class', isSelected ? 'marble selected' : 'marble');
+        marble.setAttribute('data-r', String(r));
+        marble.setAttribute('data-c', String(c));
+        svg.appendChild(marble);
+      }
+    }
+  }
 }
 
 export function boardToTensor(grid: BoardGrid): Float32Array {
