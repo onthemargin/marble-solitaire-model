@@ -106,11 +106,15 @@ function reset() {
 async function handleBoardClick(e: MouseEvent) {
   if (!manualMode || solving) return;
 
-  const rect = svg.getBoundingClientRect();
-  const svgX = (e.clientX - rect.left) / rect.width * 350;
-  const svgY = (e.clientY - rect.top) / rect.height * 350;
+  // Use SVG's native coordinate transform — works across browsers/DPR/touch.
+  const pt = svg.createSVGPoint();
+  pt.x = e.clientX;
+  pt.y = e.clientY;
+  const ctm = svg.getScreenCTM();
+  if (!ctm) return;
+  const svgPt = pt.matrixTransform(ctm.inverse());
 
-  const target = getClickTarget(svgX, svgY);
+  const target = getClickTarget(svgPt.x, svgPt.y);
   if (!target) {
     selectedMarble = null;
     renderBoard(svg, currentGrid);
