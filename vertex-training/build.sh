@@ -1,14 +1,15 @@
 #!/bin/bash
 # Build and push the training container via Cloud Build.
-# This works from the dev VM (Cloud Build SA handles the build).
 #
-# After this, submit the training job from GCP Console:
-#   Vertex AI → Training → Create Custom Job
-#   See submit-console-steps.md for details.
+# Replace YOUR_PROJECT with your GCP project id before running, or set
+# PROJECT_ID env var.
+#
+# After this, submit the training job from the Vertex AI Console using
+# one of the *-spec.yaml files in this directory.
 
 set -euo pipefail
 
-PROJECT_ID="ai-dev-463705"
+PROJECT_ID="${PROJECT_ID:-YOUR_PROJECT}"
 TIMESTAMP=$(date +%Y%m%d-%H%M%S)
 IMAGE_URI="gcr.io/${PROJECT_ID}/marble-solitaire-training:${TIMESTAMP}"
 
@@ -30,6 +31,3 @@ echo "Container built and pushed: ${IMAGE_URI}"
 echo ""
 echo "Use this image URI when creating the job in Console:"
 echo "  ${IMAGE_URI}"
-echo ""
-echo "Next: Submit training job from GCP Console."
-echo "See vertex-training/submit-console-steps.md"

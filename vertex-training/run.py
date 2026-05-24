@@ -44,6 +44,44 @@ def upload_to_gcs(local_path, local_root, gcs_dir):
         print(f"  -> GCS upload failed: {e}")
 
 
+def run_export_mapping(args):
+    """Export a custom label→.pt mapping. Each label becomes <label>.onnx."""
+    from google.cloud import storage
+
+    gcs_output_dir = os.environ.get("AIP_MODEL_DIR", "")
+    output_dir = "/tmp/output" if gcs_output_dir.startswith("gs://") else (gcs_output_dir or "/tmp/output")
+    onnx_dir = os.path.join(output_dir, "onnx")
+    os.makedirs(onnx_dir, exist_ok=True)
+
+    client = storage.Client()
+    print(f"Network: {args.channels}ch × {args.n_blocks} blocks")
+    print("Custom export mapping:")
+
+    for pair in args.export_mapping.split(","):
+        label, gcs_path = pair.split("=", 1)
+        label = label.strip()
+        gcs_path = gcs_path.strip()
+        parts = gcs_path.replace("gs://", "").split("/", 1)
+        bucket = client.bucket(parts[0])
+        blob = bucket.blob(parts[1])
+        if not blob.exists():
+            print(f"  Skipping {label}: {gcs_path} not found")
+            continue
+        local_pt = os.path.join(output_dir, f"{label}.pt")
+        blob.download_to_filename(local_pt)
+
+        model = SolitaireNet(channels=args.channels, n_blocks=args.n_blocks)
+        state = torch.load(local_pt, weights_only=True, map_location="cpu")
+        model.load_state_dict(state)
+        onnx_path = os.path.join(onnx_dir, f"{label}.onnx")
+        export_to_onnx(model, onnx_path)
+        size_kb = os.path.getsize(onnx_path) / 1024
+        print(f"  {label}: {gcs_path} → {onnx_path} ({size_kb:.0f} KB)")
+        upload_to_gcs(onnx_path, output_dir, gcs_output_dir)
+
+    print("\nDone.")
+
+
 def run_export_only(args):
     """Download .pt checkpoints from GCS, export each GEN_LABELS iter to ONNX, upload."""
     from google.cloud import storage
@@ -110,10 +148,16 @@ def main():
     parser.add_argument("--export-only-from", type=str, default="",
                         help="If set, download .pt files from this GCS prefix, "
                              "export each GEN_LABELS iter to ONNX, upload, and exit.")
+    parser.add_argument("--export-mapping", type=str, default="",
+                        help="Comma-separated label=gcs_path pairs. Each .pt is "
+                             "downloaded, exported to ONNX as <label>.onnx, uploaded.")
     args = parser.parse_args()
 
     if args.export_only_from:
         run_export_only(args)
+        return
+    if args.export_mapping:
+        run_export_mapping(args)
         return
 
     checkpoint_iters = set(int(x) for x in args.checkpoint_iters.split(","))

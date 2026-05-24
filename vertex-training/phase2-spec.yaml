@@ -1,19 +1,16 @@
-# Phase 2 training spec — bigger network, sharper reward, seed solutions.
+# Phase 2 training spec — bootstrapped from Phase 1, sharper reward, seed search.
 # Goal: gen5_master solves on pure greedy (1 marble in center).
 #
 # Two-step approach:
-#   1. Bootstrap from Phase 1's gen5_master checkpoint (also 64ch — keep architecture matching)
-#   2. Run high-MCTS seed search at startup to find ≤2-marble solutions
-#   3. Seed examples added to replay buffer (replicated 10x for weight)
+#   1. Bootstrap from Phase 1's gen5_master checkpoint (same network shape)
+#   2. Run high-MCTS seed search at startup to find ≤2-marble trajectories
+#   3. Seed examples added to replay buffer (replicated N× for weight)
 #   4. Standard training proceeds from there
 #
-# Submit:
-#   ./vertex-training/build.sh
-#   # Edit imageUri below to match new build, then:
-#   gcloud ai custom-jobs create --region=us-central1 \
-#     --display-name=marble-solitaire-phase2 \
-#     --config=vertex-training/phase2-spec.yaml \
-#     --project=ai-dev-463705
+# Replace placeholders before submitting:
+#   PHASE2_IMAGE       — image tag printed by build.sh
+#   YOUR_PROJECT       — your GCP project id
+#   YOUR_BUCKET        — your GCS bucket for artifacts
 
 workerPoolSpecs:
   - machineSpec:
@@ -22,7 +19,7 @@ workerPoolSpecs:
       acceleratorCount: 1
     replicaCount: 1
     containerSpec:
-      imageUri: gcr.io/ai-dev-463705/marble-solitaire-training:20260517-225212
+      imageUri: gcr.io/YOUR_PROJECT/marble-solitaire-training:PHASE2_IMAGE
       args:
         - --iterations=750
         - --episodes=50
@@ -30,14 +27,14 @@ workerPoolSpecs:
         - --channels=64
         - --n-blocks=3
         - --checkpoint-iters=1,15,50,150,250,500,750
-        - --bootstrap-checkpoint=gs://ai-dev-463705-ml-artifacts/marble-solitaire/run-20260511c/iter_500.pt
+        - --bootstrap-checkpoint=gs://YOUR_BUCKET/marble-solitaire/phase1/iter_500.pt
         - --seed-attempts=30
         - --seed-sims=3000
         - --seed-copies=10
       env:
         - name: AIP_MODEL_DIR
-          value: gs://ai-dev-463705-ml-artifacts/marble-solitaire/phase2/
+          value: gs://YOUR_BUCKET/marble-solitaire/phase2/
         - name: PYTHONUNBUFFERED
           value: "1"
 baseOutputDirectory:
-  outputUriPrefix: gs://ai-dev-463705-ml-artifacts/marble-solitaire/phase2/
+  outputUriPrefix: gs://YOUR_BUCKET/marble-solitaire/phase2/

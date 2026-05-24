@@ -9,6 +9,9 @@ steps:
       - '.'
 images:
   - '${_IMAGE_URI}'
-serviceAccount: 'projects/ai-dev-463705/serviceAccounts/cloudbuild-deploy@ai-dev-463705.iam.gserviceaccount.com'
+# Run as a dedicated build SA scoped to Cloud Build + Artifact Registry only.
+# Replace with your project + SA, or remove this line to use the default
+# Cloud Build SA.
+serviceAccount: 'projects/YOUR_PROJECT/serviceAccounts/cloudbuild-deploy@YOUR_PROJECT.iam.gserviceaccount.com'
 options:
   logging: CLOUD_LOGGING_ONLY

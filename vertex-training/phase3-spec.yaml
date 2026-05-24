@@ -8,7 +8,12 @@
 #   2. Higher Dirichlet noise (0.5 vs 0.3) — more root exploration to break
 #      out of the "always stop at 2 marbles" local optimum.
 #
-# Hard cap: 200 iters. Stop early if model starts solving.
+# Outcome: regressed — over-explored, lost what Phase 2 taught.
+#
+# Replace placeholders before submitting:
+#   PHASE3_IMAGE       — image tag printed by build.sh
+#   YOUR_PROJECT       — your GCP project id
+#   YOUR_BUCKET        — your GCS bucket for artifacts
 
 workerPoolSpecs:
   - machineSpec:
@@ -17,7 +22,7 @@ workerPoolSpecs:
       acceleratorCount: 1
     replicaCount: 1
     containerSpec:
-      imageUri: gcr.io/ai-dev-463705/marble-solitaire-training:20260523-005002
+      imageUri: gcr.io/YOUR_PROJECT/marble-solitaire-training:PHASE3_IMAGE
       args:
         - --iterations=200
         - --episodes=50
@@ -25,15 +30,15 @@ workerPoolSpecs:
         - --channels=64
         - --n-blocks=3
         - --checkpoint-iters=1,25,50,75,100,150,200
-        - --bootstrap-checkpoint=gs://ai-dev-463705-ml-artifacts/marble-solitaire/phase2/iter_250.pt
+        - --bootstrap-checkpoint=gs://YOUR_BUCKET/marble-solitaire/phase2/iter_250.pt
         - --curriculum-fraction=0.3
         - --curriculum-min-marbles=5
         - --curriculum-max-marbles=12
         - --dirichlet-epsilon=0.5
       env:
         - name: AIP_MODEL_DIR
-          value: gs://ai-dev-463705-ml-artifacts/marble-solitaire/phase3/
+          value: gs://YOUR_BUCKET/marble-solitaire/phase3/
         - name: PYTHONUNBUFFERED
           value: "1"
 baseOutputDirectory:
-  outputUriPrefix: gs://ai-dev-463705-ml-artifacts/marble-solitaire/phase3/
+  outputUriPrefix: gs://YOUR_BUCKET/marble-solitaire/phase3/
