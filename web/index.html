@@ -91,26 +91,33 @@
         <p>There's a subtle problem with self-play: if the AI always picks what it thinks is best, it'll keep playing the same games and stop improving. To fix this, we sprinkle random <strong>Dirichlet noise</strong> into the AI's move probabilities at the start of each MCTS search. This forces it to occasionally try moves it wouldn't normally consider &mdash; like a student being told "try a different approach on this problem." Sometimes those random detours reveal strategies the AI never would have found otherwise.</p>
 
         <h3>The Training Numbers</h3>
+        <p>Training ran across two phases on a single NVIDIA T4 GPU in Google Cloud's Vertex AI. The second phase bootstrapped from the first &mdash; it picked up where Phase 1 left off and continued learning with stronger MCTS.</p>
         <div class="training-stats">
-          <div class="training-stat-row"><span>Total training time</span><span>~10 hours (2-core CPU, no GPU)</span></div>
-          <div class="training-stat-row"><span>Training iterations</span><span>250</span></div>
-          <div class="training-stat-row"><span>Games played</span><span>~12,500 self-play games</span></div>
-          <div class="training-stat-row"><span>Moves considered per turn</span><span>100 MCTS simulations</span></div>
-          <div class="training-stat-row"><span>Total training examples</span><span>~350,000 board positions</span></div>
-          <div class="training-stat-row"><span>Model size</span><span>75,000 parameters (311 KB)</span></div>
-          <div class="training-stat-row"><span>Loss (start &rarr; end)</span><span>5.0 &rarr; 1.4 (lower is better)</span></div>
+          <div class="training-stat-row"><span>Phase 1</span><span>500 iters, 100 MCTS sims, 32 hours, ~$20</span></div>
+          <div class="training-stat-row"><span>Phase 2 (bootstrapped)</span><span>250 iters, 200 MCTS sims, 60 hours, ~$74</span></div>
+          <div class="training-stat-row"><span>Total compute</span><span>~92 hours on T4 GPU, ~$94</span></div>
+          <div class="training-stat-row"><span>Games played</span><span>~25,000 self-play games</span></div>
+          <div class="training-stat-row"><span>Training examples</span><span>~750,000 board positions</span></div>
+          <div class="training-stat-row"><span>Model size</span><span>75,000 parameters (311 KB ONNX)</span></div>
+          <div class="training-stat-row"><span>Loss (start &rarr; end)</span><span>5.0 &rarr; 1.1 (lower is better)</span></div>
+          <div class="training-stat-row"><span>Avg marbles remaining</span><span>~25 (Gen 1) &rarr; 2 (Gen 5)</span></div>
         </div>
+
+        <h3>Why doesn't Gen 5 fully solve?</h3>
+        <p>You'll notice Gen 5 consistently gets to 2 marbles remaining but rarely finishes with just one. That's not a bug &mdash; it's the honest result of a capped training budget.</p>
+        <p>Marble solitaire has roughly 10<sup>9</sup> possible game paths. The reward signal in AlphaZero-style training comes from <em>finishing</em> the puzzle. But if the AI never finishes during self-play, it never sees the "+1.0 you won!" signal &mdash; so it has nothing to learn from for that final move. It's like trying to learn how a story ends when you've only ever read the middle chapters.</p>
+        <p>The full AlphaZero recipe for hard puzzles is: keep training longer (often days to weeks) and use much larger networks, until random exploration eventually stumbles into the first complete solution. From there, the model rapidly learns to reproduce it. We chose to cap the budget at ~$100 instead &mdash; so you're seeing what pure self-play discovers within that limit. With 10&times; the compute, Gen 5 would likely solve. Without seeding it answers, that's where AlphaZero-style training honestly lands.</p>
 
         <h3>What You're Seeing</h3>
         <p>The 5 generations are snapshots of the AI at different points during training:</p>
         <ul>
-          <li><strong>Gen 1 &mdash; Clueless</strong> (iteration 1): The network has random weights. It makes legal moves but has no idea what it's doing. Expect lots of marbles left over.</li>
+          <li><strong>Gen 1 &mdash; Clueless</strong> (iteration 1): The network has random weights. It makes legal moves but has no idea what it's doing. Expect 20&ndash;30 marbles left over.</li>
           <li><strong>Gen 2 &mdash; Beginner</strong> (iteration 15): Starting to learn basic patterns. It can clear some areas of the board but gets stuck often.</li>
-          <li><strong>Gen 3 &mdash; Intermediate</strong> (iteration 50): Has played ~2,500 games. It consistently clears most of the board, but the endgame is still hard.</li>
-          <li><strong>Gen 4 &mdash; Advanced</strong> (iteration 150): After ~7,500 games and exploration noise, it's found new strategies. Getting close to solving.</li>
-          <li><strong>Gen 5 &mdash; Master</strong> (iteration 250): The final model. Watch how it handles the endgame compared to Gen 1.</li>
+          <li><strong>Gen 3 &mdash; Intermediate</strong> (iteration 50): Has played thousands of games. It consistently clears most of the board.</li>
+          <li><strong>Gen 4 &mdash; Advanced</strong> (iteration 150): Found stronger strategies through exploration. Usually gets down to 3&ndash;5 marbles.</li>
+          <li><strong>Gen 5 &mdash; Master</strong> (iteration 250 of Phase 2): The final model. Consistently reaches 2 marbles &mdash; near-perfect endgame play, but the very last move is the wall it hits.</li>
         </ul>
-        <p>Try them all and compare! The same puzzle, the same neural network architecture, but radically different skill levels &mdash; all from self-play.</p>
+        <p>Try them all and compare. The same puzzle, the same neural network architecture, but radically different skill levels &mdash; all discovered through self-play, with no human telling the model how to solve.</p>
       </div>
     </details>
   </div>

@@ -9,21 +9,16 @@ class SolitaireNet(nn.Module):
     Output: (policy [B, 196], value [B, 1])
     """
 
-    def __init__(self):
+    def __init__(self, channels: int = 64, n_blocks: int = 3):
         super().__init__()
-        self.trunk = nn.Sequential(
-            nn.Conv2d(2, 64, kernel_size=3, padding=1),
-            nn.BatchNorm2d(64),
-            nn.ReLU(),
-            nn.Conv2d(64, 64, kernel_size=3, padding=1),
-            nn.BatchNorm2d(64),
-            nn.ReLU(),
-            nn.Conv2d(64, 64, kernel_size=3, padding=1),
-            nn.BatchNorm2d(64),
-            nn.ReLU(),
-        )
-        self.policy_head = nn.Conv2d(64, 4, kernel_size=1)
-        self.value_conv = nn.Conv2d(64, 1, kernel_size=1)
+        layers = [nn.Conv2d(2, channels, kernel_size=3, padding=1),
+                  nn.BatchNorm2d(channels), nn.ReLU()]
+        for _ in range(n_blocks - 1):
+            layers += [nn.Conv2d(channels, channels, kernel_size=3, padding=1),
+                       nn.BatchNorm2d(channels), nn.ReLU()]
+        self.trunk = nn.Sequential(*layers)
+        self.policy_head = nn.Conv2d(channels, 4, kernel_size=1)
+        self.value_conv = nn.Conv2d(channels, 1, kernel_size=1)
         self.value_fc = nn.Sequential(
             nn.Linear(49, 64),
             nn.ReLU(),

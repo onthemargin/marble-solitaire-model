@@ -6,9 +6,11 @@ from marble_solitaire.board import BoardState, create_legal_move_mask, move_to_i
 
 def compute_outcome(remaining_marbles: int, center_marble: bool = False) -> float:
     if remaining_marbles == 1 and center_marble:
-        return 1.0   # perfect solve
+        return 1.0
     if remaining_marbles == 1:
-        return 0.8    # solved but not centered
+        return 0.6
+    if remaining_marbles == 2:
+        return -0.3
     return -1.0 + 2.0 / remaining_marbles
 
 

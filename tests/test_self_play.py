@@ -9,10 +9,10 @@ class TestComputeOutcome:
         assert compute_outcome(1, center_marble=True) == 1.0
 
     def test_solved_not_center(self):
-        assert compute_outcome(1, center_marble=False) == 0.8
+        assert compute_outcome(1, center_marble=False) == 0.6
 
     def test_two_marbles(self):
-        assert compute_outcome(2) == pytest.approx(0.0)
+        assert compute_outcome(2) == pytest.approx(-0.3)
 
     def test_monotonic(self):
         for n in range(2, 35):

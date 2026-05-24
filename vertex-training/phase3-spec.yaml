@@ -1,0 +1,39 @@
+# Phase 3 — pure-discovery training, no seed cheating.
+#
+# Strategy: bootstrap from Phase 2's iter_250 (already plays well, avg 2 marbles),
+# then continue training with two pure-discovery improvements:
+#   1. Curriculum: 30% of episodes start from a random mid/late-game position
+#      reached by random play. All states are legally reachable — no answers
+#      injected. Gives concentrated endgame practice.
+#   2. Higher Dirichlet noise (0.5 vs 0.3) — more root exploration to break
+#      out of the "always stop at 2 marbles" local optimum.
+#
+# Hard cap: 200 iters. Stop early if model starts solving.
+
+workerPoolSpecs:
+  - machineSpec:
+      machineType: n1-standard-4
+      acceleratorType: NVIDIA_TESLA_T4
+      acceleratorCount: 1
+    replicaCount: 1
+    containerSpec:
+      imageUri: gcr.io/ai-dev-463705/marble-solitaire-training:20260523-005002
+      args:
+        - --iterations=200
+        - --episodes=50
+        - --simulations=200
+        - --channels=64
+        - --n-blocks=3
+        - --checkpoint-iters=1,25,50,75,100,150,200
+        - --bootstrap-checkpoint=gs://ai-dev-463705-ml-artifacts/marble-solitaire/phase2/iter_250.pt
+        - --curriculum-fraction=0.3
+        - --curriculum-min-marbles=5
+        - --curriculum-max-marbles=12
+        - --dirichlet-epsilon=0.5
+      env:
+        - name: AIP_MODEL_DIR
+          value: gs://ai-dev-463705-ml-artifacts/marble-solitaire/phase3/
+        - name: PYTHONUNBUFFERED
+          value: "1"
+baseOutputDirectory:
+  outputUriPrefix: gs://ai-dev-463705-ml-artifacts/marble-solitaire/phase3/

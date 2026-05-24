@@ -1,0 +1,16 @@
+# Only send src/ and vertex-training/ to Cloud Build
+.git/
+.venv/
+.pytest_cache/
+__pycache__/
+*.pyc
+*.egg-info/
+models/
+tests/
+web/
+dist/
+build/
+.claude/
+*.md
+*.toml
+.gitignore

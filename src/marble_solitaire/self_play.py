@@ -6,9 +6,39 @@ from marble_solitaire.board import initial_board, index_to_move
 from marble_solitaire.mcts import mcts_search, get_action_probabilities, compute_outcome
 
 
-def run_episode(network, n_simulations=50, temp_threshold=15):
-    """Run one self-play episode. Returns list of (state_tensor, policy, outcome)."""
+def sample_curriculum_start(min_marbles=5, max_marbles=12):
+    """Reach a curriculum starting position by random play from the initial board.
+
+    All resulting states are legally reachable (no cheating — we don't inject
+    impossible positions). The model gets concentrated endgame practice while
+    still seeing only valid trajectories.
+    """
     state = initial_board()
+    target = np.random.randint(min_marbles, max_marbles + 1)
+    while state.count_marbles() > target:
+        legal = state.get_legal_moves()
+        if not legal:
+            break
+        move_idx = np.random.randint(len(legal))
+        state = state.apply_move(legal[move_idx])
+    return state
+
+
+def run_episode(network, n_simulations=50, temp_threshold=15,
+                endgame_temp=0.05, endgame_threshold=25,
+                curriculum_endgame=False,
+                curriculum_min_marbles=5, curriculum_max_marbles=12,
+                dirichlet_epsilon=0.25):
+    """Run one self-play episode. Returns list of (state_tensor, policy, outcome).
+
+    If curriculum_endgame is True, starts from a random mid/late-game position
+    (reachable by random play) instead of the initial board. This gives the
+    model concentrated endgame practice without injecting solutions.
+    """
+    if curriculum_endgame:
+        state = sample_curriculum_start(curriculum_min_marbles, curriculum_max_marbles)
+    else:
+        state = initial_board()
     trajectory = []
     move_count = 0
 
@@ -17,9 +47,19 @@ def run_episode(network, n_simulations=50, temp_threshold=15):
         if not legal_moves:
             break
 
-        root = mcts_search(state, network, n_simulations)
+        root = mcts_search(state, network, n_simulations,
+                           dirichlet_epsilon=dirichlet_epsilon)
 
-        temperature = 1.0 if move_count < temp_threshold else 0.1
+        # Curriculum episodes are short — keep temperature low throughout for
+        # high-quality endgame play. Full episodes use the normal schedule.
+        if curriculum_endgame:
+            temperature = endgame_temp
+        elif move_count < temp_threshold:
+            temperature = 1.0
+        elif move_count < endgame_threshold:
+            temperature = 0.1
+        else:
+            temperature = endgame_temp
         policy = get_action_probabilities(root, temperature)
 
         trajectory.append((state.to_tensor(), policy, None))

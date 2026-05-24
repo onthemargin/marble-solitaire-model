@@ -14,11 +14,12 @@ def solve_greedy(network, board):
         if not legal:
             break
 
-        state_tensor = torch.FloatTensor(current.to_tensor()).unsqueeze(0)
+        device = next(network.parameters()).device
+        state_tensor = torch.FloatTensor(current.to_tensor()).unsqueeze(0).to(device)
         with torch.no_grad():
             policy_logits, _ = network(state_tensor)
 
-        logits = policy_logits.squeeze(0).numpy()
+        logits = policy_logits.squeeze(0).cpu().numpy()
         mask = create_legal_move_mask(legal)
 
         # Mask illegal moves to -inf

@@ -1,0 +1,14 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - '${_IMAGE_URI}'
+      - '-f'
+      - 'vertex-training/Dockerfile'
+      - '.'
+images:
+  - '${_IMAGE_URI}'
+serviceAccount: 'projects/ai-dev-463705/serviceAccounts/cloudbuild-deploy@ai-dev-463705.iam.gserviceaccount.com'
+options:
+  logging: CLOUD_LOGGING_ONLY

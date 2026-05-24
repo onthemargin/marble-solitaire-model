@@ -1,6 +1,58 @@
 # Marble Solitaire — AlphaZero-Style Solver
 
-## Context
+## Current Status (2026-05-17)
+
+The original plan below describes the initial v1 build. Below is the current state and Phase 2 plan.
+
+### Built and deployed
+- Full pipeline: board engine, MCTS, dual-headed CNN, self-play, training, ONNX export, web UI
+- Vertex AI Custom Training pipeline (GPU jobs from this VM)
+- App live at https://app.gyatso.me/marble-solitaire/ with manual play mode + 5 generation snapshots + educational content
+- Phase 1 training completed (500 iters, T4 GPU, 32h, $20)
+
+### Phase 1 results
+- 5 generations of checkpoints exported to ONNX
+- gen5_master plateaued at 5 marbles remaining, **0/10 center solves**
+- Root cause: model never observed a complete winning trajectory during self-play (~10⁹ game paths), so no `+1.0` reward signal to learn from
+
+### Phase 2 plan (in progress)
+Goal: gen5_master reliably reaches 1 marble in the center on greedy inference.
+
+Changes for Phase 2:
+- **Bootstrap from Phase 1 gen5_master** (preserves what was learned, same 64ch architecture)
+- **Seed search at startup**: 30 episodes of high-MCTS (3000 sims/move) finds ≤2-marble trajectories, seeded into replay buffer with 10× weight
+- 750 iterations (was 500), 50 episodes/iter (was 25), 200 MCTS sims/move (was 100)
+- Sharpened reward: 2 marbles → -0.3 (was 0.0); 1 marble off-center → +0.6 (was +0.8)
+- Harder temperature decay: 0.05 after move 25 (was just 0.1 throughout endgame)
+
+Expected: ~24h on T4, ~$15-20.
+
+Spec: `vertex-training/phase2-spec.yaml`. Submit with:
+```
+./vertex-training/build.sh
+gcloud ai custom-jobs create --region=us-central1 \
+  --display-name=marble-solitaire-phase2 \
+  --config=vertex-training/phase2-spec.yaml \
+  --project=ai-dev-463705
+```
+
+### GCP hardening done
+- Compute SA scoped to bucket-level Storage Object Admin (was project-level Object Viewer)
+- Cloud Build SA downgraded from Cloud Run Admin to Cloud Run Developer
+- Bucket: uniform access, public access prevention, audit logs, 90-day lifecycle
+- Container: PyTorch 2.6 (was 2.2), non-root user, pinned pip versions, .dockerignore filters
+- Custom training SA option documented but currently using Compute SA (solo dev box)
+
+### Open items
+- Run Phase 2 (waiting on user fire)
+- After Phase 2, download ONNX → rebuild web/dist → deploy via /go
+- (Future) Cloud LLM integration for move commentary, generation narrator
+
+---
+
+## Original Plan (v1, completed)
+
+### Context
 
 Build a toy AlphaZero-style model that learns to solve European 37-hole marble solitaire through self-play. The web UI tells the **story of the model learning** — showing 5 generations from random flailing to skilled solving.
 
