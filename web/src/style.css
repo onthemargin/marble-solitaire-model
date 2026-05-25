@@ -10,7 +10,7 @@ body {
 }
 
 #app {
-  max-width: 700px;
+  max-width: 1200px;
   width: 100%;
   padding: 24px 16px;
 }
@@ -19,65 +19,124 @@ header { text-align: center; margin-bottom: 24px; }
 h1 { font-size: 1.6rem; color: #fff; margin-bottom: 4px; }
 .subtitle { font-size: 0.85rem; color: #888; }
 
+/* Two-column layout: How It Works | Play area */
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 32px;
+  align-items: start;
+}
+
+.how-it-works {
+  background: #1a1a2e;
+  border: 1px solid #2a2a3e;
+  border-radius: 8px;
+  padding: 20px 24px;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: #aaa;
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
+  position: sticky;
+  top: 24px;
+}
+.how-it-works h2 {
+  color: #fff;
+  font-size: 1.1rem;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #2a2a3e;
+}
+.how-it-works h3 { color: #c4b5fd; margin: 16px 0 6px; font-size: 0.9rem; }
+.how-it-works h3:first-of-type { margin-top: 0; }
+.how-it-works ul, .how-it-works ol { margin-left: 20px; }
+.how-it-works li { margin-bottom: 4px; }
+
+.play-area {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: stretch;
+}
+
+/* Mode toggle */
+.mode-toggle {
+  display: flex;
+  background: #12121f;
+  border: 1px solid #2a2a3e;
+  border-radius: 8px;
+  padding: 4px;
+  gap: 4px;
+}
+.mode-btn {
+  flex: 1;
+  background: transparent;
+  color: #888;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.mode-btn:hover { color: #fff; background: rgba(255,255,255,0.04); }
+.mode-btn.active {
+  background: #7c3aed;
+  color: #fff;
+}
+
 /* Generation selector */
 .gen-selector {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  margin-bottom: 24px;
+  gap: 4px;
   flex-wrap: wrap;
 }
-.gen-label { color: #888; font-size: 0.85rem; margin-right: 8px; }
+.gen-label { color: #888; font-size: 0.8rem; margin-right: 6px; width: 100%; text-align: center; }
 .gen-btn {
   background: #1a1a2e;
   border: 1px solid #333;
   color: #aaa;
-  padding: 8px 12px;
-  border-radius: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 2px;
   transition: all 0.2s;
+  min-width: 56px;
 }
 .gen-btn:hover { border-color: #666; color: #fff; }
 .gen-btn.active { border-color: #7c3aed; background: #1e1040; color: #c4b5fd; }
-.gen-name { font-size: 0.65rem; opacity: 0.7; }
-.gen-arrow { color: #444; font-size: 0.8rem; }
+.gen-name { font-size: 0.6rem; opacity: 0.7; }
+.gen-arrow { color: #444; font-size: 0.75rem; }
 
-/* Main layout */
-.main-content {
-  display: flex;
-  gap: 20px;
-  align-items: flex-start;
-  justify-content: center;
-  margin-bottom: 20px;
-}
+/* Board */
 .board-container {
-  width: 320px;
-  height: 320px;
-  flex-shrink: 0;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  max-width: 360px;
+  align-self: center;
 }
 #board { width: 100%; height: 100%; }
 
 /* Stats */
 .stats-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  min-width: 120px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: 8px;
 }
 .stat {
   background: #1a1a2e;
   border: 1px solid #2a2a3e;
   border-radius: 8px;
-  padding: 10px 14px;
+  padding: 8px 12px;
 }
-.stat-label { display: block; font-size: 0.7rem; color: #666; text-transform: uppercase; letter-spacing: 0.05em; }
-.stat-value { display: block; font-size: 1.2rem; color: #fff; font-weight: 600; margin-top: 2px; }
+.stat-label { display: block; font-size: 0.65rem; color: #666; text-transform: uppercase; letter-spacing: 0.05em; }
+.stat-value { display: block; font-size: 1.1rem; color: #fff; font-weight: 600; margin-top: 2px; }
 
 /* Controls */
 .controls {
@@ -85,7 +144,7 @@ h1 { font-size: 1.6rem; color: #fff; margin-bottom: 4px; }
   align-items: center;
   justify-content: center;
   gap: 12px;
-  margin-bottom: 24px;
+  flex-wrap: wrap;
 }
 button {
   background: #7c3aed;
@@ -99,9 +158,6 @@ button {
 }
 button:hover { background: #6d28d9; }
 button:disabled { background: #333; color: #666; cursor: not-allowed; }
-#play-btn { background: #059669; }
-#play-btn:hover { background: #047857; }
-#play-btn.active-mode { background: #7c3aed; }
 #reset-btn { background: #2a2a3e; }
 #reset-btn:hover { background: #3a3a4e; }
 
@@ -114,26 +170,8 @@ button:disabled { background: #333; color: #666; cursor: not-allowed; }
 }
 .speed-control input { width: 80px; accent-color: #7c3aed; }
 
-/* About section */
-.about-section {
-  background: #1a1a2e;
-  border: 1px solid #2a2a3e;
-  border-radius: 8px;
-  padding: 12px 16px;
-}
-.about-section summary {
-  cursor: pointer;
-  color: #888;
-  font-size: 0.85rem;
-}
-.about-content {
-  margin-top: 12px;
-  font-size: 0.8rem;
-  line-height: 1.6;
-  color: #aaa;
-}
-.about-content h3 { color: #c4b5fd; margin: 16px 0 6px; font-size: 0.9rem; }
-.about-content h3:first-child { margin-top: 0; }
+/* Mode-conditional visibility */
+.play-area[data-mode="manual"] .ai-only { display: none; }
 
 /* Training stats table */
 .training-stats {
@@ -152,8 +190,6 @@ button:disabled { background: #333; color: #666; cursor: not-allowed; }
 .training-stat-row:last-child { border-bottom: none; }
 .training-stat-row span:first-child { color: #888; }
 .training-stat-row span:last-child { color: #c4b5fd; font-weight: 500; }
-.about-content ul, .about-content ol { margin-left: 20px; }
-.about-content li { margin-bottom: 4px; }
 
 /* SVG board styles */
 .hole { fill: #1a1a2e; stroke: #333; stroke-width: 1; }
@@ -181,8 +217,16 @@ button:disabled { background: #333; color: #666; cursor: not-allowed; }
   transition: cx 0.3s ease-in-out, cy 0.3s ease-in-out;
 }
 
-@media (max-width: 600px) {
-  .main-content { flex-direction: column; align-items: center; }
-  .stats-panel { flex-direction: row; flex-wrap: wrap; justify-content: center; }
-  .board-container { width: 280px; height: 280px; }
+/* Mobile: single column, play area on top */
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .play-area { order: -1; }
+  .how-it-works {
+    position: static;
+    max-height: none;
+    overflow-y: visible;
+  }
 }

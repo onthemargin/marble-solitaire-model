@@ -9,15 +9,16 @@ let selectedMarble: { row: number; col: number } | null = null;
 let currentGen = 1;
 
 const svg = document.getElementById('board') as unknown as SVGSVGElement;
+const playArea = document.querySelector('.play-area') as HTMLElement;
 const marbleCountEl = document.getElementById('marble-count')!;
 const moveCountEl = document.getElementById('move-count')!;
 const confidenceEl = document.getElementById('confidence')!;
 const statusEl = document.getElementById('status')!;
 const solveBtn = document.getElementById('solve-btn') as HTMLButtonElement;
 const resetBtn = document.getElementById('reset-btn') as HTMLButtonElement;
-const playBtn = document.getElementById('play-btn') as HTMLButtonElement;
 const speedSlider = document.getElementById('speed') as HTMLInputElement;
 const genBtns = document.querySelectorAll('.gen-btn');
+const modeBtns = document.querySelectorAll<HTMLButtonElement>('.mode-btn');
 
 function updateStats(confidence?: number) {
   marbleCountEl.textContent = String(countMarbles(currentGrid));
@@ -64,27 +65,29 @@ async function selectGen(gen: number) {
   }
 }
 
-function enterManualMode() {
+function setMode(mode: 'ai' | 'manual') {
   if (solving) return;
-  manualMode = true;
+  manualMode = mode === 'manual';
   selectedMarble = null;
-  playBtn.textContent = 'AI Mode';
-  playBtn.classList.add('active-mode');
-  solveBtn.disabled = true;
-  setStatus('Your turn — click a marble');
+  playArea.dataset.mode = mode;
+  modeBtns.forEach(btn => {
+    const active = btn.dataset.mode === mode;
+    btn.classList.toggle('active', active);
+    btn.setAttribute('aria-selected', String(active));
+  });
+  // Reset the board when switching modes so each mode starts fresh.
+  currentGrid = initialBoard();
+  moveHistory = [];
   renderBoard(svg, currentGrid);
-  svg.style.cursor = 'pointer';
-}
-
-function exitManualMode() {
-  manualMode = false;
-  selectedMarble = null;
-  playBtn.textContent = 'Play';
-  playBtn.classList.remove('active-mode');
-  solveBtn.disabled = !isModelLoaded();
-  setStatus('Ready');
-  renderBoard(svg, currentGrid);
-  svg.style.cursor = '';
+  updateStats();
+  if (manualMode) {
+    setStatus('Your turn — click a marble');
+    svg.style.cursor = 'pointer';
+  } else {
+    setStatus(isModelLoaded() ? 'Ready' : 'Loading...');
+    solveBtn.disabled = !isModelLoaded();
+    svg.style.cursor = '';
+  }
 }
 
 function reset() {
@@ -197,7 +200,7 @@ async function solve() {
   solving = true;
   solveBtn.textContent = 'Stop';
   resetBtn.disabled = true;
-  playBtn.disabled = true;
+  modeBtns.forEach(b => (b.disabled = true));
   setStatus('Solving...');
 
   while (solving) {
@@ -232,15 +235,17 @@ async function solve() {
   solving = false;
   solveBtn.textContent = 'Solve';
   resetBtn.disabled = false;
-  playBtn.disabled = false;
+  modeBtns.forEach(b => (b.disabled = false));
 }
 
 // Wire up events
 solveBtn.addEventListener('click', solve);
 resetBtn.addEventListener('click', reset);
-playBtn.addEventListener('click', () => {
-  if (manualMode) exitManualMode();
-  else enterManualMode();
+modeBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const mode = btn.dataset.mode as 'ai' | 'manual';
+    setMode(mode);
+  });
 });
 svg.addEventListener('click', handleBoardClick);
 genBtns.forEach(btn => {
@@ -251,7 +256,8 @@ genBtns.forEach(btn => {
   });
 });
 
-// Initial render
+// Initial render — start in AI Mode
+playArea.dataset.mode = 'ai';
 renderBoard(svg, currentGrid);
 updateStats();
 selectGen(1);

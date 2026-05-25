@@ -13,56 +13,10 @@
       <p class="subtitle">Watch an AlphaZero-style neural network learn to solve European peg solitaire</p>
     </header>
 
-    <div class="gen-selector">
-      <span class="gen-label">Generation:</span>
-      <button class="gen-btn active" data-gen="1">1<span class="gen-name">Clueless</span></button>
-      <span class="gen-arrow">&rarr;</span>
-      <button class="gen-btn" data-gen="2">2<span class="gen-name">Beginner</span></button>
-      <span class="gen-arrow">&rarr;</span>
-      <button class="gen-btn" data-gen="3">3<span class="gen-name">Intermediate</span></button>
-      <span class="gen-arrow">&rarr;</span>
-      <button class="gen-btn" data-gen="4">4<span class="gen-name">Advanced</span></button>
-      <span class="gen-arrow">&rarr;</span>
-      <button class="gen-btn" data-gen="5">5<span class="gen-name">Master</span></button>
-    </div>
+    <div class="layout">
+      <aside class="how-it-works">
+        <h2>How It Works</h2>
 
-    <div class="main-content">
-      <div class="board-container">
-        <svg id="board" viewBox="0 0 350 350"></svg>
-      </div>
-      <div class="stats-panel">
-        <div class="stat">
-          <span class="stat-label">Marbles</span>
-          <span class="stat-value" id="marble-count">36</span>
-        </div>
-        <div class="stat">
-          <span class="stat-label">Move</span>
-          <span class="stat-value" id="move-count">0</span>
-        </div>
-        <div class="stat">
-          <span class="stat-label">Confidence</span>
-          <span class="stat-value" id="confidence">--</span>
-        </div>
-        <div class="stat">
-          <span class="stat-label">Status</span>
-          <span class="stat-value" id="status">Ready</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="controls">
-      <button id="play-btn">Play</button>
-      <button id="solve-btn">Solve</button>
-      <button id="reset-btn">Reset</button>
-      <label class="speed-control">
-        Speed
-        <input type="range" id="speed" min="50" max="1000" value="400" step="50">
-      </label>
-    </div>
-
-    <details class="about-section">
-      <summary>How It Works</summary>
-      <div class="about-content">
         <h3>The Game</h3>
         <p>European marble solitaire is a puzzle played on a board with 37 holes and 36 marbles. The center hole starts empty. You move by jumping one marble over another into an empty hole &mdash; the jumped marble is removed. The goal is to end with just 1 marble left. It sounds simple, but there are billions of possible move sequences, and most end with you stuck and several marbles remaining.</p>
 
@@ -85,7 +39,7 @@
           <li><strong>Learn</strong> &mdash; After playing, it trains the neural network on those recorded games. The network learns: "In positions like this, moves like that tend to lead to better outcomes." The policy head learns to suggest better moves. The value head learns to recognize good vs. bad positions.</li>
           <li><strong>Repeat</strong> &mdash; Now the AI plays more games, but this time with a slightly smarter neural network guiding the MCTS. It plays a bit better, generates better training data, which makes the network smarter still.</li>
         </ol>
-        <p>Each cycle through this loop is called an <strong>iteration</strong>. Over 250 iterations, the AI transforms from making random jumps to discovering real strategies &mdash; all without being taught a single tactic by a human.</p>
+        <p>Each cycle through this loop is called an <strong>iteration</strong>. Over many iterations, the AI transforms from making random jumps to discovering real strategies &mdash; all without being taught a single tactic by a human.</p>
 
         <h3>A Secret Ingredient: Dirichlet Noise</h3>
         <p>There's a subtle problem with self-play: if the AI always picks what it thinks is best, it'll keep playing the same games and stop improving. To fix this, we sprinkle random <strong>Dirichlet noise</strong> into the AI's move probabilities at the start of each MCTS search. This forces it to occasionally try moves it wouldn't normally consider &mdash; like a student being told "try a different approach on this problem." Sometimes those random detours reveal strategies the AI never would have found otherwise.</p>
@@ -110,15 +64,69 @@
         <h3>What You're Seeing</h3>
         <p>The 5 generations are snapshots across both training phases &mdash; you're watching the AI go from random play to near-perfect:</p>
         <ul>
-          <li><strong>Gen 1 &mdash; Clueless</strong> (Phase 1, iter 1): Random initial weights. It makes legal moves but has no idea what it's doing. Expect 20&ndash;30 marbles left.</li>
-          <li><strong>Gen 2 &mdash; Beginner</strong> (Phase 1, iter 50): A few thousand self-play games in. Picking up local patterns but still flails. ~12&ndash;18 marbles.</li>
-          <li><strong>Gen 3 &mdash; Intermediate</strong> (Phase 1, iter 150): Real strategy emerging. Consistently clears most of the board. ~6&ndash;10 marbles.</li>
-          <li><strong>Gen 4 &mdash; Advanced</strong> (Phase 1, iter 500, end of Phase 1): Strong play across the whole game. ~4&ndash;6 marbles.</li>
-          <li><strong>Gen 5 &mdash; Master</strong> (Phase 2, iter 250, bootstrapped from Gen 4): Near-perfect endgame. Consistently reaches 2 marbles, but the very last move is the wall it hits.</li>
+          <li><strong>Gen 1 &mdash; Clueless</strong>: Random initial weights. It makes legal moves but has no idea what it's doing. Expect 20&ndash;30 marbles left.</li>
+          <li><strong>Gen 2 &mdash; Beginner</strong>: A few thousand self-play games in. Picking up local patterns but still flails. ~12&ndash;18 marbles.</li>
+          <li><strong>Gen 3 &mdash; Intermediate</strong>: Real strategy emerging. Consistently clears most of the board. ~6&ndash;10 marbles.</li>
+          <li><strong>Gen 4 &mdash; Advanced</strong>: Strong play across the whole game. ~4&ndash;6 marbles.</li>
+          <li><strong>Gen 5 &mdash; Master</strong>: Near-perfect endgame. Consistently reaches 2 marbles, but the very last move is the wall it hits.</li>
         </ul>
         <p>Try them all and compare. The same puzzle, the same neural network architecture, but radically different skill levels &mdash; all discovered through self-play, with no human telling the model how to solve.</p>
-      </div>
-    </details>
+      </aside>
+
+      <main class="play-area">
+        <div class="mode-toggle" role="tablist" aria-label="Mode">
+          <button class="mode-btn active" data-mode="ai" role="tab" aria-selected="true">AI Mode</button>
+          <button class="mode-btn" data-mode="manual" role="tab" aria-selected="false">Manual</button>
+        </div>
+
+        <div class="ai-only">
+          <div class="gen-selector">
+            <span class="gen-label">Generation:</span>
+            <button class="gen-btn active" data-gen="1">1<span class="gen-name">Clueless</span></button>
+            <span class="gen-arrow">&rarr;</span>
+            <button class="gen-btn" data-gen="2">2<span class="gen-name">Beginner</span></button>
+            <span class="gen-arrow">&rarr;</span>
+            <button class="gen-btn" data-gen="3">3<span class="gen-name">Intermediate</span></button>
+            <span class="gen-arrow">&rarr;</span>
+            <button class="gen-btn" data-gen="4">4<span class="gen-name">Advanced</span></button>
+            <span class="gen-arrow">&rarr;</span>
+            <button class="gen-btn" data-gen="5">5<span class="gen-name">Master</span></button>
+          </div>
+        </div>
+
+        <div class="board-container">
+          <svg id="board" viewBox="0 0 350 350"></svg>
+        </div>
+
+        <div class="stats-panel">
+          <div class="stat">
+            <span class="stat-label">Marbles</span>
+            <span class="stat-value" id="marble-count">36</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Move</span>
+            <span class="stat-value" id="move-count">0</span>
+          </div>
+          <div class="stat ai-only">
+            <span class="stat-label">Confidence</span>
+            <span class="stat-value" id="confidence">--</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Status</span>
+            <span class="stat-value" id="status">Ready</span>
+          </div>
+        </div>
+
+        <div class="controls">
+          <button id="solve-btn" class="ai-only">Solve</button>
+          <button id="reset-btn">Reset</button>
+          <label class="speed-control ai-only">
+            Speed
+            <input type="range" id="speed" min="50" max="1000" value="400" step="50">
+          </label>
+        </div>
+      </main>
+    </div>
   </div>
   <script type="module" src="./src/main.ts"></script>
 </body>
