@@ -1,0 +1,45 @@
+# Phase 4 — bootstrap from Phase 2 under the corrected reward.
+#
+# Phase 2 was trained with `+1.0 = 1 marble at center` — mathematically
+# unreachable on the 37-hole board with orthogonal-only rules from a centre
+# start (position-class invariant). The model never saw the +1.0 signal, so
+# it plateaued at 2 marbles instead of pushing to 1-anywhere.
+#
+# Phase 4 keeps the Phase 2 trunk weights but re-aims the value head at the
+# new reward (+1.0 for 1 marble anywhere). Seed search targets 1-marble
+# solutions so a real winning trajectory enters the replay buffer.
+#
+# Conservative settings — Phase 3 showed that aggressive curriculum +
+# dirichlet noise erases Phase 2 learning. Keep noise low; no curriculum.
+#
+# Replace placeholders before submitting:
+#   PHASE4_IMAGE       — image tag printed by build.sh
+#   YOUR_PROJECT       — your GCP project id
+#   YOUR_BUCKET        — your GCS bucket for artifacts
+
+workerPoolSpecs:
+  - machineSpec:
+      machineType: n1-standard-4
+      acceleratorType: NVIDIA_TESLA_T4
+      acceleratorCount: 1
+    replicaCount: 1
+    containerSpec:
+      imageUri: gcr.io/YOUR_PROJECT/marble-solitaire-training:PHASE4_IMAGE
+      args:
+        - --iterations=250
+        - --episodes=50
+        - --simulations=200
+        - --channels=64
+        - --n-blocks=3
+        - --checkpoint-iters=1,25,50,100,150,200,250
+        - --bootstrap-checkpoint=gs://YOUR_BUCKET/marble-solitaire/phase2/iter_250.pt
+        - --seed-attempts=40
+        - --seed-sims=4000
+        - --seed-copies=15
+      env:
+        - name: AIP_MODEL_DIR
+          value: gs://YOUR_BUCKET/marble-solitaire/phase4/
+        - name: PYTHONUNBUFFERED
+          value: "1"
+baseOutputDirectory:
+  outputUriPrefix: gs://YOUR_BUCKET/marble-solitaire/phase4/

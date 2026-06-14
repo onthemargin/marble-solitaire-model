@@ -7,11 +7,11 @@ from marble_solitaire.mcts import MCTSNode, mcts_search, get_action_probabilitie
 
 
 class TestComputeOutcome:
-    def test_solved_center_is_plus_one(self):
-        assert compute_outcome(1, center_marble=True) == 1.0
-
-    def test_solved_not_center(self):
-        assert compute_outcome(1, center_marble=False) == 0.6
+    def test_single_marble_is_plus_one(self):
+        # Center-finish is mathematically impossible on the 37-hole board with
+        # orthogonal-only rules and a centre-start, so any single-marble
+        # finish is the achievable optimum.
+        assert compute_outcome(1) == 1.0
 
     def test_two_marbles_is_negative(self):
         assert compute_outcome(2) == pytest.approx(-0.3)

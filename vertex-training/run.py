@@ -209,8 +209,7 @@ def main():
             model,
             n_simulations=args.seed_sims,
             max_attempts=args.seed_attempts,
-            target_marbles=2,
-            prefer_center=True,
+            target_marbles=1,
         )
         if moves is not None:
             examples = moves_to_examples(moves)

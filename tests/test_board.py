@@ -90,6 +90,15 @@ class TestTerminal:
         assert board.is_terminal()
         assert board.is_solved()
 
+    def test_single_marble_off_center_is_solved(self):
+        # Center-finish is unreachable under standard rules from a centre
+        # start; any single-marble finish is a valid solve.
+        grid = np.zeros((7, 7), dtype=np.int8)
+        grid[2, 1] = 1
+        board = BoardState(grid)
+        assert board.is_terminal()
+        assert board.is_solved()
+
     def test_no_legal_moves_is_terminal(self):
         grid = np.zeros((7, 7), dtype=np.int8)
         grid[0, 2] = 1

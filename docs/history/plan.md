@@ -1,5 +1,7 @@
 # Marble Solitaire — AlphaZero-Style Solver
 
+> **Historical document.** This is the original v1 design plan, kept for the design-evolution record. Several decisions in here were later overturned — most notably, the centre-start version is now known to have *no* single-marble solution (Durango Bill's enumeration), so the "Gen 5 solves" target was impossible from the start. See the top-level `README.md` for the current state.
+
 ## Context
 
 Build a toy AlphaZero-style model that learns to solve European 37-hole marble solitaire through self-play. The web UI tells the **story of the model learning** — showing 5 generations from random flailing to skilled solving.

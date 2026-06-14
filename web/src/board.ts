@@ -194,7 +194,13 @@ export function getClickTarget(svgX: number, svgY: number): { row: number; col: 
   return null;
 }
 
-export function renderBoardWithSelection(svg: SVGSVGElement, grid: BoardGrid, selectedR?: number, selectedC?: number, validTargets?: Set<string>): void {
+export function getJumpableSources(grid: BoardGrid): Set<string> {
+  const set = new Set<string>();
+  for (const m of getLegalMoves(grid)) set.add(`${m.row},${m.col}`);
+  return set;
+}
+
+export function renderBoardWithSelection(svg: SVGSVGElement, grid: BoardGrid, selectedR?: number, selectedC?: number, validTargets?: Set<string>, jumpable?: Set<string>): void {
   svg.innerHTML = '';
   for (let r = 0; r < 7; r++) {
     for (let c = 0; c < 7; c++) {
@@ -214,7 +220,9 @@ export function renderBoardWithSelection(svg: SVGSVGElement, grid: BoardGrid, se
         marble.setAttribute('cy', String(cy(r)));
         marble.setAttribute('r', String(MARBLE_R - 2));
         const isSelected = r === selectedR && c === selectedC;
-        marble.setAttribute('class', isSelected ? 'marble selected' : 'marble');
+        const canJump = jumpable?.has(`${r},${c}`);
+        const cls = isSelected ? 'marble selected' : canJump ? 'marble jumpable' : 'marble';
+        marble.setAttribute('class', cls);
         marble.setAttribute('data-r', String(r));
         marble.setAttribute('data-c', String(c));
         svg.appendChild(marble);

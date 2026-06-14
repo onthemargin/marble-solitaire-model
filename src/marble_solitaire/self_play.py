@@ -70,7 +70,7 @@ def run_episode(network, n_simulations=50, temp_threshold=15,
         state = state.apply_move(move)
         move_count += 1
 
-    outcome = compute_outcome(state.count_marbles(), state.has_center_marble())
+    outcome = compute_outcome(state.count_marbles())
     examples = [(s, p, outcome) for s, p, _ in trajectory]
     return examples
 

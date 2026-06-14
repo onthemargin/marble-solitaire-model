@@ -74,10 +74,7 @@ class BoardState:
         return len(self.get_legal_moves()) == 0
 
     def is_solved(self) -> bool:
-        return self.count_marbles() == 1 and self.grid[3, 3] == 1
-
-    def has_center_marble(self) -> bool:
-        return bool(self.grid[3, 3])
+        return self.count_marbles() == 1
 
     def to_tensor(self) -> np.ndarray:
         """Return (2, 7, 7) float32 tensor: [marbles, valid_mask]."""

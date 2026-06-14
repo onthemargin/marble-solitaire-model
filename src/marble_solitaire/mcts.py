@@ -4,11 +4,12 @@ import torch
 from marble_solitaire.board import BoardState, create_legal_move_mask, move_to_index
 
 
-def compute_outcome(remaining_marbles: int, center_marble: bool = False) -> float:
-    if remaining_marbles == 1 and center_marble:
-        return 1.0
+def compute_outcome(remaining_marbles: int) -> float:
+    # Center-finish is unreachable on the 37-hole European board with
+    # orthogonal-only rules and a centre-start (position-class invariant),
+    # so any single-marble finish is the achievable optimum.
     if remaining_marbles == 1:
-        return 0.6
+        return 1.0
     if remaining_marbles == 2:
         return -0.3
     return -1.0 + 2.0 / remaining_marbles
@@ -57,11 +58,11 @@ def mcts_search(root_state, network, n_simulations, c_puct=1.5,
             path.append(node)
 
         if node.state.is_terminal():
-            value = compute_outcome(node.state.count_marbles(), node.state.has_center_marble())
+            value = compute_outcome(node.state.count_marbles())
         elif not node.children:
             legal = node.state.get_legal_moves()
             if not legal:
-                value = compute_outcome(node.state.count_marbles(), node.state.has_center_marble())
+                value = compute_outcome(node.state.count_marbles())
             else:
                 value = _expand(node, network)
         else:
@@ -77,7 +78,7 @@ def mcts_search(root_state, network, n_simulations, c_puct=1.5,
 def _expand(node, network):
     legal_moves = node.state.get_legal_moves()
     if not legal_moves:
-        return compute_outcome(node.state.count_marbles(), node.state.has_center_marble())
+        return compute_outcome(node.state.count_marbles())
 
     state_tensor = torch.FloatTensor(node.state.to_tensor()).unsqueeze(0)
     # Move to same device as model

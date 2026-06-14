@@ -18,59 +18,38 @@
         <h2>How It Works</h2>
 
         <h3>The Game</h3>
-        <p>European marble solitaire is a puzzle played on a board with 37 holes and 36 marbles. The center hole starts empty. You move by jumping one marble over another into an empty hole &mdash; the jumped marble is removed. The goal is to end with just 1 marble left. It sounds simple, but there are billions of possible move sequences, and most end with you stuck and several marbles remaining.</p>
+        <p>37 holes, 36 marbles, one empty spot in the middle. Jump a marble orthogonally (no diagonals) over a neighbor into an empty hole; the jumped marble is removed. The goal: end with as few marbles as possible.</p>
 
-        <h3>The AI: A Tiny Brain That Teaches Itself</h3>
-        <p>This AI knows absolutely nothing about marble solitaire when it starts. No rules were programmed in beyond "here's the board and here are the legal moves." Everything else &mdash; strategy, patterns, which moves lead to dead ends &mdash; it figured out on its own.</p>
-        <p>The "brain" is a <strong>convolutional neural network</strong> with about 75,000 parameters (tiny by modern AI standards &mdash; ChatGPT has billions). It takes a snapshot of the board and outputs two things:</p>
+        <h3>The AI</h3>
+        <p>A small neural network (75K parameters) trained itself by playing thousands of games against itself &mdash; no rules of strategy taught, just the legal moves. Same recipe as AlphaGo, scaled way down.</p>
+
+        <details class="training-viz-details" id="training-viz">
+          <summary>Watch the model learn</summary>
+          <div class="training-viz">
+            <div class="tv-meta">
+              <div><span class="tv-label">At:</span> <span class="tv-readout-gen">Clueless</span></div>
+              <div><span class="tv-label">Marbles left:</span> <span class="tv-readout-marbles">12</span></div>
+            </div>
+            <svg class="tv-chart"></svg>
+            <div class="tv-legend">
+              The dot is the same neural network getting better with training. It plateaus at <strong>2</strong> &mdash; the <a href="https://www.durangobill.com/Peg37.html" target="_blank" rel="noopener">proven mathematical minimum</a> from this start.
+            </div>
+          </div>
+        </details>
+
+        <h3>The 5 Generations</h3>
+        <p>Each generation is the same network at a later point in training. Pick one and hit Solve to see how it plays:</p>
         <ul>
-          <li><strong>Policy</strong> &mdash; "Here's how confident I am in each possible move" (a probability for every legal jump)</li>
-          <li><strong>Value</strong> &mdash; "How good does this board position look?" (a score from -1 for hopeless to +1 for solved)</li>
+          <li><strong>Gen 1 &mdash; Clueless</strong>: random play, ~12 marbles left.</li>
+          <li><strong>Gen 2 &mdash; Beginner</strong>: picking up patterns, ~8 left.</li>
+          <li><strong>Gen 3 &mdash; Intermediate</strong>: real strategy, ~8 left.</li>
+          <li><strong>Gen 4 &mdash; Advanced</strong>: strong play, ~5 left.</li>
+          <li><strong>Gen 5 &mdash; Master</strong>: 2 marbles &mdash; the proven optimum.</li>
         </ul>
 
-        <h3>How It Thinks: Imagining the Future</h3>
-        <p>Before making each move, the AI doesn't just pick the first thing that looks good. It runs a mental simulation called <strong>MCTS (Monte Carlo Tree Search)</strong> &mdash; the same technique used by AlphaGo, the AI that beat the world champion at Go.</p>
-        <p>Think of it like a chess player thinking ahead: "If I jump here, then I could jump there, then..." The AI imagines hundreds of possible futures from the current position, guided by its neural network. Moves that the network thinks are promising get explored more deeply. After all that "thinking," it picks the move that looked best across all the simulations.</p>
-
-        <h3>How It Learns: Playing Against Itself</h3>
-        <p>Here's where it gets interesting. The AI trains itself through a loop inspired by <strong>AlphaZero</strong> (DeepMind's game-playing AI):</p>
-        <ol>
-          <li><strong>Play</strong> &mdash; The AI plays 50 full games of solitaire using MCTS to choose moves. Early on, its neural network is random, so it plays badly. But it always records what happened: which board positions it saw, which moves it chose, and how the game ended.</li>
-          <li><strong>Learn</strong> &mdash; After playing, it trains the neural network on those recorded games. The network learns: "In positions like this, moves like that tend to lead to better outcomes." The policy head learns to suggest better moves. The value head learns to recognize good vs. bad positions.</li>
-          <li><strong>Repeat</strong> &mdash; Now the AI plays more games, but this time with a slightly smarter neural network guiding the MCTS. It plays a bit better, generates better training data, which makes the network smarter still.</li>
-        </ol>
-        <p>Each cycle through this loop is called an <strong>iteration</strong>. Over many iterations, the AI transforms from making random jumps to discovering real strategies &mdash; all without being taught a single tactic by a human.</p>
-
-        <h3>A Secret Ingredient: Dirichlet Noise</h3>
-        <p>There's a subtle problem with self-play: if the AI always picks what it thinks is best, it'll keep playing the same games and stop improving. To fix this, we sprinkle random <strong>Dirichlet noise</strong> into the AI's move probabilities at the start of each MCTS search. This forces it to occasionally try moves it wouldn't normally consider &mdash; like a student being told "try a different approach on this problem." Sometimes those random detours reveal strategies the AI never would have found otherwise.</p>
-
-        <h3>The Training Numbers</h3>
-        <p>Training ran on a single cloud GPU across two phases. The second phase bootstrapped from the first &mdash; it picked up where Phase 1 left off and continued learning with stronger MCTS.</p>
-        <div class="training-stats">
-          <div class="training-stat-row"><span>Phase 1</span><span>500 iters, 100 MCTS sims per move</span></div>
-          <div class="training-stat-row"><span>Phase 2 (bootstrapped)</span><span>250 iters, 200 MCTS sims per move</span></div>
-          <div class="training-stat-row"><span>Games played</span><span>~25,000 self-play games</span></div>
-          <div class="training-stat-row"><span>Training examples</span><span>~750,000 board positions</span></div>
-          <div class="training-stat-row"><span>Model size</span><span>75,000 parameters (311 KB ONNX)</span></div>
-          <div class="training-stat-row"><span>Loss (start &rarr; end)</span><span>5.0 &rarr; 1.1 (lower is better)</span></div>
-          <div class="training-stat-row"><span>Avg marbles remaining</span><span>~25 (Gen 1) &rarr; 2 (Gen 5)</span></div>
-        </div>
-
-        <h3>Why doesn't Gen 5 fully solve?</h3>
-        <p>You'll notice Gen 5 consistently gets to 2 marbles remaining but rarely finishes with just one. That's not a bug &mdash; it's the honest result of a capped training budget.</p>
-        <p>Marble solitaire has roughly 10<sup>9</sup> possible game paths. The reward signal in AlphaZero-style training comes from <em>finishing</em> the puzzle. But if the AI never finishes during self-play, it never sees the "+1.0 you won!" signal &mdash; so it has nothing to learn from for that final move. It's like trying to learn how a story ends when you've only ever read the middle chapters.</p>
-        <p>The full AlphaZero recipe for hard puzzles is: keep training much longer and use much larger networks, until random exploration eventually stumbles into the first complete solution. From there, the model rapidly learns to reproduce it. We chose to stop earlier &mdash; so you're seeing what pure self-play discovers within a modest budget. With ~10&times; the compute, Gen 5 would likely solve. Without seeding it answers, that's where AlphaZero-style training honestly lands.</p>
-
-        <h3>What You're Seeing</h3>
-        <p>The 5 generations are snapshots across both training phases &mdash; you're watching the AI go from random play to near-perfect:</p>
-        <ul>
-          <li><strong>Gen 1 &mdash; Clueless</strong>: Random initial weights. It makes legal moves but has no idea what it's doing. Expect 20&ndash;30 marbles left.</li>
-          <li><strong>Gen 2 &mdash; Beginner</strong>: A few thousand self-play games in. Picking up local patterns but still flails. ~12&ndash;18 marbles.</li>
-          <li><strong>Gen 3 &mdash; Intermediate</strong>: Real strategy emerging. Consistently clears most of the board. ~6&ndash;10 marbles.</li>
-          <li><strong>Gen 4 &mdash; Advanced</strong>: Strong play across the whole game. ~4&ndash;6 marbles.</li>
-          <li><strong>Gen 5 &mdash; Master</strong>: Near-perfect endgame. Consistently reaches 2 marbles, but the very last move is the wall it hits.</li>
-        </ul>
-        <p>Try them all and compare. The same puzzle, the same neural network architecture, but radically different skill levels &mdash; all discovered through self-play, with no human telling the model how to solve.</p>
+        <h3>Why Gen 5 stops at 2</h3>
+        <p>From a centre-start on the 37-hole European board, no single-marble finish is reachable. A computer enumeration by Durango Bill checked all <strong>16,662,591,542,028,595,169,821,912</strong> possible game sequences from this start &mdash; that's 16 quintillion &mdash; and <em>zero</em> end with one marble. The mathematical minimum is 2, and Gen 5 hits it every game.</p>
+        <p>Or switch to Manual and try it yourself.</p>
       </aside>
 
       <main class="play-area">

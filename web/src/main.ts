@@ -1,5 +1,6 @@
-import { initialBoard, renderBoard, renderBoardWithSelection, animateMove, applyMove, countMarbles, getLegalMoves, findMove, getClickTarget, BoardGrid, Move } from './board';
+import { initialBoard, renderBoard, renderBoardWithSelection, animateMove, applyMove, countMarbles, getLegalMoves, findMove, getClickTarget, getJumpableSources, BoardGrid, Move } from './board';
 import { loadModel, predictMove, isModelLoaded } from './solver';
+import { initTrainingViz } from './training-viz';
 
 let currentGrid: BoardGrid = initialBoard();
 let moveHistory: Move[] = [];
@@ -28,6 +29,14 @@ function updateStats(confidence?: number) {
 
 function setStatus(text: string) {
   statusEl.textContent = text;
+}
+
+// 2 is the proven mathematical minimum from a centre-start on the 37-hole
+// European board (Durango Bill enumerated all 1.66×10²⁵ game sequences).
+function endgameMessage(remaining: number): string {
+  if (remaining === 1) return 'Solved!';
+  if (remaining === 2) return 'Optimal — 2 is the proven minimum';
+  return `Stuck (${remaining} left)`;
 }
 
 function getSpeed(): number {
@@ -65,6 +74,10 @@ async function selectGen(gen: number) {
   }
 }
 
+function renderManual() {
+  renderBoardWithSelection(svg, currentGrid, undefined, undefined, undefined, getJumpableSources(currentGrid));
+}
+
 function setMode(mode: 'ai' | 'manual') {
   if (solving) return;
   manualMode = mode === 'manual';
@@ -78,12 +91,13 @@ function setMode(mode: 'ai' | 'manual') {
   // Reset the board when switching modes so each mode starts fresh.
   currentGrid = initialBoard();
   moveHistory = [];
-  renderBoard(svg, currentGrid);
   updateStats();
   if (manualMode) {
-    setStatus('Your turn — click a marble');
+    renderManual();
+    setStatus('Tap a glowing marble');
     svg.style.cursor = 'pointer';
   } else {
+    renderBoard(svg, currentGrid);
     setStatus(isModelLoaded() ? 'Ready' : 'Loading...');
     solveBtn.disabled = !isModelLoaded();
     svg.style.cursor = '';
@@ -95,11 +109,12 @@ function reset() {
   currentGrid = initialBoard();
   moveHistory = [];
   selectedMarble = null;
-  renderBoard(svg, currentGrid);
   updateStats();
   if (manualMode) {
-    setStatus('Your turn — click a marble');
+    renderManual();
+    setStatus('Tap a glowing marble');
   } else {
+    renderBoard(svg, currentGrid);
     setStatus('Ready');
     solveBtn.disabled = !isModelLoaded();
   }
@@ -120,8 +135,8 @@ async function handleBoardClick(e: MouseEvent) {
   const target = getClickTarget(svgPt.x, svgPt.y);
   if (!target) {
     selectedMarble = null;
-    renderBoard(svg, currentGrid);
-    setStatus('Your turn — click a marble');
+    renderManual();
+    setStatus('Tap a glowing marble');
     return;
   }
 
@@ -138,15 +153,15 @@ async function handleBoardClick(e: MouseEvent) {
 
       currentGrid = newGrid;
       selectedMarble = null;
-      renderBoard(svg, currentGrid);
+      renderManual();
       updateStats();
 
       const legal = getLegalMoves(currentGrid);
       if (legal.length === 0) {
         const remaining = countMarbles(currentGrid);
-        setStatus(remaining === 1 ? 'You solved it!' : `No moves left (${remaining} remaining)`);
+        setStatus(endgameMessage(remaining));
       } else {
-        setStatus('Your turn — click a marble');
+        setStatus('Tap a glowing marble');
       }
       return;
     }
@@ -155,31 +170,33 @@ async function handleBoardClick(e: MouseEvent) {
     if (currentGrid[target.row][target.col]) {
       selectedMarble = target;
       const targets = getValidTargets(currentGrid, target.row, target.col);
+      const jumpable = getJumpableSources(currentGrid);
       if (targets.size > 0) {
-        renderBoardWithSelection(svg, currentGrid, target.row, target.col, targets);
-        setStatus('Click a highlighted hole to jump');
+        renderBoardWithSelection(svg, currentGrid, target.row, target.col, targets, jumpable);
+        setStatus('Tap a dashed hole to jump');
       } else {
-        renderBoardWithSelection(svg, currentGrid, target.row, target.col);
-        setStatus('No jumps from here — try another');
+        renderBoardWithSelection(svg, currentGrid, target.row, target.col, undefined, jumpable);
+        setStatus('No jumps from here — tap a glowing marble');
       }
       return;
     }
 
     // Clicked an invalid target
     selectedMarble = null;
-    renderBoard(svg, currentGrid);
-    setStatus('Your turn — click a marble');
+    renderManual();
+    setStatus('Tap a glowing marble');
   } else {
     // Select a marble
     if (currentGrid[target.row][target.col]) {
       selectedMarble = target;
       const targets = getValidTargets(currentGrid, target.row, target.col);
+      const jumpable = getJumpableSources(currentGrid);
       if (targets.size > 0) {
-        renderBoardWithSelection(svg, currentGrid, target.row, target.col, targets);
-        setStatus('Click a highlighted hole to jump');
+        renderBoardWithSelection(svg, currentGrid, target.row, target.col, targets, jumpable);
+        setStatus('Tap a dashed hole to jump');
       } else {
-        renderBoardWithSelection(svg, currentGrid, target.row, target.col);
-        setStatus('No jumps from here — try another');
+        renderBoardWithSelection(svg, currentGrid, target.row, target.col, undefined, jumpable);
+        setStatus('No jumps from here — tap a glowing marble');
       }
     }
   }
@@ -207,7 +224,7 @@ async function solve() {
     const legal = getLegalMoves(currentGrid);
     if (legal.length === 0) {
       const remaining = countMarbles(currentGrid);
-      setStatus(remaining === 1 ? 'Solved!' : `Stuck (${remaining} left)`);
+      setStatus(endgameMessage(remaining));
       break;
     }
 
@@ -261,3 +278,6 @@ playArea.dataset.mode = 'ai';
 renderBoard(svg, currentGrid);
 updateStats();
 selectGen(1);
+
+const tvDetails = document.getElementById('training-viz') as HTMLDetailsElement | null;
+if (tvDetails) initTrainingViz(tvDetails);
